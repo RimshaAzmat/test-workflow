@@ -1,0 +1,10 @@
+# Ensure S3 Access Points have Public Access Block settings enabled
+rule S3_ACCESS_POINT_PUBLIC_ACCESS_BLOCKS {
+    Resources.*[ Type == "AWS::S3::AccessPoint" ] {
+        Properties.PublicAccessBlockConfiguration exists <<S3 Access Point public access settings are missing.>>
+        Properties.PublicAccessBlockConfiguration.BlockPublicAcls == true <<BlockPublicAcls must be set to true.>>
+        Properties.PublicAccessBlockConfiguration.BlockPublicPolicy == true <<BlockPublicPolicy must be set to true.>>
+        Properties.PublicAccessBlockConfiguration.IgnorePublicAcls == true <<IgnorePublicAcls must be set to true.>>
+        Properties.PublicAccessBlockConfiguration.RestrictPublicBuckets == true <<RestrictPublicBuckets must be set to true.>>
+    }
+}
