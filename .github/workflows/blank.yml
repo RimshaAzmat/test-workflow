@@ -1,0 +1,42 @@
+name: Validate CloudFormation with cfn-guard
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cfn-guard
+        run: |
+          curl -sSLo cfn-guard.tar.gz https://github.com/aws-cloudformation/cloudformation-guard/releases/latest/download/cfn-guard-linux-amd64.tar.gz
+          tar -xvzf cfn-guard.tar.gz
+          sudo mv cfn-guard /usr/local/bin/
+          cfn-guard --version
+
+      - name: Validate CloudFormation Template
+        run: |
+          cfn-guard validate --data s3_19_test.yaml --rules s3_19.guard
+
+      - name: Upload failure logs (if validation fails)
+        if: failure()
+        run: |
+          mkdir -p logs
+          cfn-guard validate --data s3_19_test.yaml --rules s3_19.guard > logs/cfn-guard-error.log 2>&1
+          echo "Validation failed! Logs saved."
+
+      - name: Save logs as an artifact
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cfn-guard-error-logs
+          path: logs/cfn-guard-error.log
